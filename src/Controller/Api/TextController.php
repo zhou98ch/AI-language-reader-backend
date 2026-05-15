@@ -2,6 +2,8 @@
 
 namespace App\Controller\Api;
 
+use App\Infrastructure\TextParser\TextParserInterface;
+use App\Application\Text\UploadTextUseCase;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,37 +13,31 @@ use App\Entity\TextDocument;
 use App\Repository\TextDocumentRepository;
 use App\Entity\WordExplanation;
 use App\Repository\WordExplanationRepository;
-
+use InvalidArgumentException;
 
 final class TextController extends AbstractController
 {
+    public function __construct(private readonly UploadTextUseCase  $uploadTextUseCase){}
     #[Route('/api/texts', name: 'api_texts_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
+
         $title = trim($data['title'] ?? '');
         $content = trim($data['content'] ?? '');
+        $sourceType = trim($data['sourceType'] ?? '');
+        try {
 
-        if ($title === '' || $content === '') {
+            $document = $this->uploadTextUseCase->execute($title, $sourceType, $content);
+
+        } catch (InvalidArgumentException $e) {
             return $this->json([
-                'error' => 'title and content are required',
+                'error' => $e->getMessage(),
             ], 400);
         }
 
-        $now = new \DateTimeImmutable();
 
-        $document = new TextDocument();
-        $document
-            ->setTitle($title)
-            ->setContent($content)
-            ->setSourceType('TXT')
-            ->setLanguage('de')
-            ->setCreatedAt($now)
-            ->setUpdatedAt($now);
-
-        $entityManager->persist($document);
-        $entityManager->flush();
 
         return $this->json([
             'id' => $document->getId(),
