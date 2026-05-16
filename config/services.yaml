@@ -21,3 +21,10 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    _instanceof:
+        App\Infrastructure\AI\AiExplanationClientInterface:
+            tags: ['app.ai_explanation_client']
+
+    App\Infrastructure\AI\AiExplanationClientRegistry:
+        arguments:
+            $clients: !tagged_iterator app.ai_explanation_client
