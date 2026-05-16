@@ -4,10 +4,9 @@ namespace App\Controller\Api;
 
 use App\Application\Text\ExplainWordUseCase;
 use App\Application\Text\Exception\TextDocumentNotFoundException;
+use App\Application\Text\GetExplanationHistoryUseCase;
 use App\Application\Text\GetTextDocumentUseCase;
 use App\Application\Text\UploadTextUseCase;
-use App\Repository\TextDocumentRepository;
-use App\Repository\WordExplanationRepository;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,6 +19,7 @@ final class TextController extends AbstractController
         private readonly UploadTextUseCase $uploadTextUseCase,
         private readonly GetTextDocumentUseCase $getTextDocumentUseCase,
         private readonly ExplainWordUseCase $explainWordUseCase,
+        private readonly GetExplanationHistoryUseCase $getExplanationHistoryUseCase,
     ) {
     }
 
@@ -103,33 +103,14 @@ final class TextController extends AbstractController
     }
 
     #[Route('/api/texts/{id}/explanations', name: 'api_texts_get_explanation_history', methods: ['GET'])]
-    public function getExplanationHistory(
-        int $id,
-        TextDocumentRepository $textDocumentRepository,
-        WordExplanationRepository $wordExplanationRepository,
-    ): JsonResponse {
-        $document = $textDocumentRepository->find($id);
-
-        if (!$document) {
+    public function getExplanationHistory(int $id): JsonResponse
+    {
+        try {
+            $result = $this->getExplanationHistoryUseCase->execute($id);
+        } catch (TextDocumentNotFoundException $e) {
             return $this->json([
-                'error' => 'text document not found',
+                'error' => $e->getMessage(),
             ], 404);
-        }
-
-        $explanations = $wordExplanationRepository->findBy(
-            ['textDocument' => $document],
-            ['createdAt' => 'DESC']
-        );
-
-        $result = [];
-
-        foreach ($explanations as $explanation) {
-            $result[] = [
-                'id' => $explanation->getId(),
-                'word' => $explanation->getWord(),
-                'context' => $explanation->getContextText(),
-                'createdAt' => $explanation->getCreatedAt()?->format(\DateTimeInterface::ATOM),
-            ];
         }
 
         return $this->json($result);
