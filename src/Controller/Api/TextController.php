@@ -2,6 +2,8 @@
 
 namespace App\Controller\Api;
 
+use App\Application\AI\Exception\AiProviderUnavailableException;
+use App\Application\AI\Exception\DailyAiQuotaExceededException;
 use App\Application\Text\ExplainWordUseCase;
 use App\Application\Text\Exception\TextDocumentNotFoundException;
 use App\Application\Text\GetExplanationHistoryUseCase;
@@ -123,6 +125,17 @@ final class TextController extends AbstractController
             return $this->json([
                 'error' => $e->getMessage(),
             ], 400);
+        } catch (DailyAiQuotaExceededException $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+                'provider' => $e->getProvider(),
+                'dailyCallLimit' => $e->getDailyCallLimit(),
+            ], 429);
+        } catch (AiProviderUnavailableException $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+                'provider' => $e->getProvider(),
+            ], $e->getStatusCode());
         }
 
 

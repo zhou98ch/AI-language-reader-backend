@@ -2,6 +2,7 @@
 
 namespace App\Application\Text;
 
+use App\Application\AI\Exception\DailyAiQuotaExceededException;
 use App\Application\Text\DTO\ExplainWordResult;
 use App\Application\Text\Exception\TextDocumentNotFoundException;
 use App\Entity\WordExplanation;
@@ -22,6 +23,8 @@ final class ExplainWordUseCase
         private readonly WordExplanationRepository $wordExplanationRepository,
         private readonly AiExplanationClientRegistry $aiClientRegistry,
         private readonly EntityManagerInterface $entityManager,
+        private readonly int $geminiDailyCallLimit,
+        private readonly string $projectDir,
     ) {
     }
 
@@ -100,7 +103,13 @@ final class ExplainWordUseCase
                 explanationType: $existingExplanation->getExplanationType() ?? $explanationType,
             );
         }
+
         $aiExplanationClient = $this->aiClientRegistry->get($provider);
+
+        if ($provider === 'gemini') {
+            $this->consumeGeminiDailyQuota();
+        }
+
         $explanationData = $aiExplanationClient->explain($word, $context, prompt: $prompt);
 
         if ($explanationType === self::INLINE_EXPLANATION) {
@@ -167,5 +176,56 @@ PROMPT;
         }
 
         return $explanation;
+    }
+
+    private function consumeGeminiDailyQuota(): void
+    {
+        if ($this->geminiDailyCallLimit <= 0) {
+            throw new DailyAiQuotaExceededException('gemini', $this->geminiDailyCallLimit);
+        }
+
+        $quotaFile = $this->projectDir . '/var/gemini_daily_quota.json';
+        $quotaDir = dirname($quotaFile);
+
+        if (!is_dir($quotaDir) && !mkdir($quotaDir, 0775, true) && !is_dir($quotaDir)) {
+            throw new RuntimeException('Unable to create AI quota directory');
+        }
+
+        $handle = fopen($quotaFile, 'c+');
+
+        if ($handle === false) {
+            throw new RuntimeException('Unable to open AI quota file');
+        }
+
+        try {
+            if (!flock($handle, LOCK_EX)) {
+                throw new RuntimeException('Unable to lock AI quota file');
+            }
+
+            $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+            $contents = stream_get_contents($handle);
+            $quota = is_string($contents) && $contents !== '' ? json_decode($contents, true) : [];
+
+            if (!is_array($quota) || ($quota['date'] ?? null) !== $today) {
+                $quota = [
+                    'date' => $today,
+                    'geminiCalls' => 0,
+                ];
+            }
+
+            if (($quota['geminiCalls'] ?? 0) >= $this->geminiDailyCallLimit) {
+                throw new DailyAiQuotaExceededException('gemini', $this->geminiDailyCallLimit);
+            }
+
+            ++$quota['geminiCalls'];
+
+            rewind($handle);
+            ftruncate($handle, 0);
+            fwrite($handle, json_encode($quota, JSON_PRETTY_PRINT));
+            fflush($handle);
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
     }
 }

@@ -33,3 +33,8 @@ services:
         arguments:
             $myTempApiKey: '%env(GEMINI_API_KEY)%'
             $myTempModel: '%env(GEMINI_MODEL)%'
+
+    App\Application\Text\ExplainWordUseCase:
+        arguments:
+            $geminiDailyCallLimit: '%env(int:AI_DAILY_CALL_LIMIT)%'
+            $projectDir: '%kernel.project_dir%'

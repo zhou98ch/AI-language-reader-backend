@@ -2,7 +2,12 @@
 
 namespace App\Infrastructure\AI;
 
+use App\Application\AI\Exception\AiProviderUnavailableException;
 use Gemini;
+use Gemini\Exceptions\ErrorException;
+use Gemini\Exceptions\TransporterException;
+use Gemini\Exceptions\UnserializableResponse;
+use JsonException;
 use RuntimeException;
 
 final class GeminiExplanationClient implements AiExplanationClientInterface
@@ -37,9 +42,18 @@ final class GeminiExplanationClient implements AiExplanationClientInterface
 
         $client = Gemini::client($apiKey);
 
-        $response = $client
-            ->generativeModel($model)
-            ->generateContent($prompt);
+        try {
+            $response = $client
+                ->generativeModel($model)
+                ->generateContent($prompt);
+        } catch (ErrorException $e) {
+            $message = $e->getMessage();
+            $statusCode = str_contains(strtolower($message), 'quota') ? 429 : 502;
+
+            throw new AiProviderUnavailableException('gemini', $statusCode, $message);
+        } catch (TransporterException|UnserializableResponse|JsonException $e) {
+            throw new AiProviderUnavailableException('gemini', 502, $e->getMessage());
+        }
 
         $content = $response->text();
 
