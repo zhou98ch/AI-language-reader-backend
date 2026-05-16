@@ -6,6 +6,7 @@ use App\Application\Text\ExplainWordUseCase;
 use App\Application\Text\Exception\TextDocumentNotFoundException;
 use App\Application\Text\GetExplanationHistoryUseCase;
 use App\Application\Text\GetTextDocumentUseCase;
+use App\Application\Text\ListTextDocumentsUseCase;
 use App\Application\Text\UploadTextUseCase;
 use InvalidArgumentException;
 use RuntimeException;
@@ -19,9 +20,16 @@ final class TextController extends AbstractController
     public function __construct(
         private readonly UploadTextUseCase $uploadTextUseCase,
         private readonly GetTextDocumentUseCase $getTextDocumentUseCase,
+        private readonly ListTextDocumentsUseCase $listTextDocumentsUseCase,
         private readonly ExplainWordUseCase $explainWordUseCase,
         private readonly GetExplanationHistoryUseCase $getExplanationHistoryUseCase,
     ) {
+    }
+
+    #[Route('/api/texts', name: 'api_texts_list', methods: ['GET'])]
+    public function list(): JsonResponse
+    {
+        return $this->json($this->listTextDocumentsUseCase->execute());
     }
 
     #[Route('/api/texts', name: 'api_texts_create', methods: ['POST'])]
