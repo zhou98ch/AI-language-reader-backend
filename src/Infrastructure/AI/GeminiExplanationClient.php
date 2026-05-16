@@ -28,11 +28,12 @@ final class GeminiExplanationClient implements AiExplanationClientInterface
             throw new RuntimeException('Gemini API key is not configured');
         }
 
-        $prompt = $prompt?: sprintf(
-            "You explain German words for learners. Word: %s, Context: %s. Explain the word based on this context. Use clear language. You may include translation, grammar notes, and examples when useful.",
-            $word,
-            $context
-        );
+        $prompt = ($prompt ?? "You explain German words for learners.Explain the word based on this context. Use clear language. You may include translation, grammar notes, and examples when useful.")
+            . sprintf(
+                " Word: %s, Context: %s. ",
+                $word,
+                $context
+            );
 
         $client = Gemini::client($apiKey);
 
