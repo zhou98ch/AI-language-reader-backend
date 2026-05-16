@@ -7,7 +7,9 @@ use App\Application\Text\Exception\TextDocumentNotFoundException;
 use App\Application\Text\GetExplanationHistoryUseCase;
 use App\Application\Text\GetTextDocumentUseCase;
 use App\Application\Text\ListTextDocumentsUseCase;
+use App\Application\Text\Exception\WordExplanationNotFoundException;
 use App\Application\Text\UploadTextUseCase;
+use App\Application\Text\UpdateWordExplanationUseCase;
 use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +25,7 @@ final class TextController extends AbstractController
         private readonly ListTextDocumentsUseCase $listTextDocumentsUseCase,
         private readonly ExplainWordUseCase $explainWordUseCase,
         private readonly GetExplanationHistoryUseCase $getExplanationHistoryUseCase,
+        private readonly UpdateWordExplanationUseCase $updateWordExplanationUseCase,
     ) {
     }
 
@@ -135,6 +138,34 @@ final class TextController extends AbstractController
             return $this->json([
                 'error' => $e->getMessage(),
             ], 404);
+        }
+
+        return $this->json($result);
+    }
+
+    #[Route('/api/texts/{textDocumentId}/explanations/{explanationId}', name: 'api_texts_update_explanation', methods: ['POST'])]
+    public function updateExplanation(
+        int $textDocumentId,
+        int $explanationId,
+        Request $request,
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+        $explanation = trim($data['explanation'] ?? '');
+
+        try {
+            $result = $this->updateWordExplanationUseCase->execute(
+                $textDocumentId,
+                $explanationId,
+                $explanation
+            );
+        } catch (TextDocumentNotFoundException|WordExplanationNotFoundException $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+            ], 404);
+        } catch (InvalidArgumentException $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+            ], 400);
         }
 
         return $this->json($result);
