@@ -7,7 +7,7 @@ final readonly class ExplainWordResult
     public function __construct(
         private string $word,
         private string $context,
-        private array $explanation,
+        private string $explanation,
         private bool $cached,
     ) {
     }

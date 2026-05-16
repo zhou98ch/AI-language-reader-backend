@@ -9,13 +9,12 @@ final class FakeAiExplanationClient implements AiExplanationClientInterface
     {
         return 'fake';
     }
-    public function explain(string $word, string $context): array
+    public function explain(string $word, string $context): string
     {
-        return [
-            'meaning' => 'temporary explanation for "' . $word . '"',
-            'translation' => 'balabalal',
-            'example' => $context,
-            'grammarNote' => 'Real AI integration will be added later.',
-        ];
+        return sprintf(
+            'Fake AI explanation for "%s" based on context: %s',
+            $word,
+            $context
+        );
     }
 }

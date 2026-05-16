@@ -26,7 +26,7 @@ final class ExplainWordUseCase
      * @return ExplainWordResult{
      *     word: string,
      *     context: string,
-     *     explanation: array<string, mixed>,
+     *     explanation: string,
      *     cached: bool
      * }
      */
@@ -46,6 +46,7 @@ final class ExplainWordUseCase
 
         $word = trim($word);
         $context = trim($context);
+        $provider = strtolower(trim($provider));
 
         if ($word === '') {
             throw new InvalidArgumentException('word are required');
@@ -67,13 +68,14 @@ final class ExplainWordUseCase
             'textDocument' => $document,
             'startOffset' => $startOffset,
             'endOffset' => $endOffset,
+            'provider' => $provider,
         ]);
 
         if ($existingExplanation) {
             return new ExplainWordResult(
                 word: $existingExplanation->getWord(),
                 context: $existingExplanation->getContextText(),
-                explanation: json_decode($existingExplanation->getExplanation(), true),
+                explanation: $existingExplanation->getExplanation(),
                 cached: true,
             );
         }
@@ -87,7 +89,8 @@ final class ExplainWordUseCase
             ->setContextText($context)
             ->setStartOffset($startOffset)
             ->setEndOffset($endOffset)
-            ->setExplanation(json_encode($explanationData, JSON_UNESCAPED_UNICODE))
+            ->setProvider($provider)
+            ->setExplanation($explanationData)
             ->setCreatedAt(new \DateTimeImmutable());
 
         $this->entityManager->persist($wordExplanation);

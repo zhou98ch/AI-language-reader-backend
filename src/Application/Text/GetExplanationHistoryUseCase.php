@@ -36,7 +36,8 @@ final class GetExplanationHistoryUseCase
                 'context' => $explanation->getContextText(),
                 'startOffset' => $explanation->getStartOffset(),
                 'endOffset' => $explanation->getEndOffset(),
-                'explanation' => json_decode($explanation->getExplanation(), true),
+                'provider' => $explanation->getProvider(),
+                'explanation' => $explanation->getExplanation(),
                 'createdAt' => $explanation->getCreatedAt()?->format(\DateTimeInterface::ATOM),
             ];
         }
