@@ -97,6 +97,7 @@ final class TextController extends AbstractController
         $context = trim($data['context'] ?? '');
         $provider = trim($data['provider'] ?? 'fake');
         $prompt = trim($data['prompt'] ?? '');
+        $explanationType = trim($data['explanationType'] ?? 'CUSTOM_PROMPT');
         $startOffset = isset($data['startOffset']) ? (int) $data['startOffset'] : null;
         $endOffset = isset($data['endOffset']) ? (int) $data['endOffset'] : null;
 
@@ -110,7 +111,8 @@ final class TextController extends AbstractController
                 $provider,
                 $prompt,
                 $startOffset,
-                $endOffset
+                $endOffset,
+                $explanationType
             );
 
         } catch (TextDocumentNotFoundException $e) {

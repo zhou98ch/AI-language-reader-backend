@@ -38,6 +38,10 @@ final class UpdateWordExplanationUseCase
             throw new InvalidArgumentException('explanation is required');
         }
 
+        if ($explanation->getExplanationType() === 'INLINE_EXPLANATION' && mb_strlen($explanationText) > 40) {
+            throw new InvalidArgumentException('inline explanation must be 40 characters or fewer');
+        }
+
         $explanation->setExplanation($explanationText);
         $this->entityManager->flush();
 
@@ -49,6 +53,7 @@ final class UpdateWordExplanationUseCase
             'endOffset' => $explanation->getEndOffset(),
             'provider' => $explanation->getProvider(),
             'promptHash' => $explanation->getPromptHash(),
+            'explanationType' => $explanation->getExplanationType(),
             'explanation' => $explanation->getExplanation(),
             'createdAt' => $explanation->getCreatedAt()?->format(\DateTimeInterface::ATOM),
         ];

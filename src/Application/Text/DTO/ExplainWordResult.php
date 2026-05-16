@@ -9,6 +9,7 @@ final readonly class ExplainWordResult
         private string $context,
         private string $explanation,
         private bool $cached,
+        private string $explanationType,
     ) {
     }
 
@@ -34,6 +35,7 @@ final readonly class ExplainWordResult
             'context' => $this->context,
             'explanation' => $this->explanation,
             'cached' => $this->cached,
+            'explanationType' => $this->explanationType,
         ];
     }
 

@@ -36,6 +36,9 @@ class WordExplanation
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $promptHash = null;
 
+    #[ORM\Column(length: 50)]
+    private ?string $explanationType = 'CUSTOM_PROMPT';
+
     #[ORM\Column(type: Types::TEXT)]
     private ?string $explanation = null;
 
@@ -127,6 +130,18 @@ class WordExplanation
     public function setPromptHash(?string $promptHash): static
     {
         $this->promptHash = $promptHash;
+
+        return $this;
+    }
+
+    public function getExplanationType(): ?string
+    {
+        return $this->explanationType;
+    }
+
+    public function setExplanationType(string $explanationType): static
+    {
+        $this->explanationType = $explanationType;
 
         return $this;
     }
