@@ -13,5 +13,5 @@ interface AiExplanationClientInterface
     /**
      * Generates a context-based explanation for a word.
      */
-    public function explain(string $word, string $context): string;
+    public function explain(string $word, string $context, ?AiCredential $credential = null, ?string $prompt = null): string;
 }

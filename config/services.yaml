@@ -28,3 +28,8 @@ services:
     App\Infrastructure\AI\AiExplanationClientRegistry:
         arguments:
             $clients: !tagged_iterator app.ai_explanation_client
+
+    App\Infrastructure\AI\GeminiExplanationClient:
+        arguments:
+            $myTempApiKey: '%env(GEMINI_API_KEY)%'
+            $myTempModel: '%env(GEMINI_MODEL)%'

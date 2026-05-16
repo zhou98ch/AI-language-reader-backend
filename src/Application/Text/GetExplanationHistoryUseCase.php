@@ -37,6 +37,7 @@ final class GetExplanationHistoryUseCase
                 'startOffset' => $explanation->getStartOffset(),
                 'endOffset' => $explanation->getEndOffset(),
                 'provider' => $explanation->getProvider(),
+                'promptHash' => $explanation->getPromptHash(),
                 'explanation' => $explanation->getExplanation(),
                 'createdAt' => $explanation->getCreatedAt()?->format(\DateTimeInterface::ATOM),
             ];

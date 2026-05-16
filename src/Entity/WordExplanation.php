@@ -30,6 +30,12 @@ class WordExplanation
     #[ORM\Column(nullable: true)]
     private ?int $endOffset = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $provider = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $promptHash = null;
+
     #[ORM\Column(type: Types::TEXT)]
     private ?string $explanation = null;
 
@@ -97,6 +103,30 @@ class WordExplanation
     public function setEndOffset(?int $endOffset): static
     {
         $this->endOffset = $endOffset;
+
+        return $this;
+    }
+
+    public function getProvider(): ?string
+    {
+        return $this->provider;
+    }
+
+    public function setProvider(?string $provider): static
+    {
+        $this->provider = $provider;
+
+        return $this;
+    }
+
+    public function getPromptHash(): ?string
+    {
+        return $this->promptHash;
+    }
+
+    public function setPromptHash(?string $promptHash): static
+    {
+        $this->promptHash = $promptHash;
 
         return $this;
     }

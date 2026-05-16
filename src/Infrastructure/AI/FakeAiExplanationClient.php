@@ -9,7 +9,7 @@ final class FakeAiExplanationClient implements AiExplanationClientInterface
     {
         return 'fake';
     }
-    public function explain(string $word, string $context): string
+    public function explain(string $word, string $context, ?AiCredential $credential = null, ?string $prompt = null): string
     {
         return sprintf(
             'Fake AI explanation for "%s" based on context: %s',

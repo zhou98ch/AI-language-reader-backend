@@ -35,6 +35,7 @@ final class ExplainWordUseCase
         string $word,
         string $context,
         string $provider = 'fake',
+        ?string $prompt = null,
         ?int $startOffset = null,
         ?int $endOffset = null,
     ): ExplainWordResult {
@@ -47,6 +48,8 @@ final class ExplainWordUseCase
         $word = trim($word);
         $context = trim($context);
         $provider = strtolower(trim($provider));
+        $prompt = $prompt !== null ? trim($prompt) : null;
+        $promptHash = hash('sha256', $prompt ?? '');
 
         if ($word === '') {
             throw new InvalidArgumentException('word are required');
@@ -69,6 +72,7 @@ final class ExplainWordUseCase
             'startOffset' => $startOffset,
             'endOffset' => $endOffset,
             'provider' => $provider,
+            'promptHash' => $promptHash,
         ]);
 
         if ($existingExplanation) {
@@ -80,7 +84,7 @@ final class ExplainWordUseCase
             );
         }
         $aiExplanationClient = $this->aiClientRegistry->get($provider);
-        $explanationData = $aiExplanationClient->explain($word, $context);
+        $explanationData = $aiExplanationClient->explain($word, $context, prompt: $prompt);
 
         $wordExplanation = new WordExplanation();
         $wordExplanation
@@ -90,6 +94,7 @@ final class ExplainWordUseCase
             ->setStartOffset($startOffset)
             ->setEndOffset($endOffset)
             ->setProvider($provider)
+            ->setPromptHash($promptHash)
             ->setExplanation($explanationData)
             ->setCreatedAt(new \DateTimeImmutable());
 

@@ -8,6 +8,7 @@ use App\Application\Text\GetExplanationHistoryUseCase;
 use App\Application\Text\GetTextDocumentUseCase;
 use App\Application\Text\UploadTextUseCase;
 use InvalidArgumentException;
+use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,6 +41,10 @@ final class TextController extends AbstractController
             return $this->json([
                 'error' => $e->getMessage(),
             ], 400);
+        } catch (RuntimeException $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+            ], 502);
         }
 
         return $this->json([
@@ -80,6 +85,7 @@ final class TextController extends AbstractController
         $word = trim($data['word'] ?? '');
         $context = trim($data['context'] ?? '');
         $provider = trim($data['provider'] ?? 'fake');
+        $prompt = trim($data['prompt'] ?? '');
         $startOffset = isset($data['startOffset']) ? (int) $data['startOffset'] : null;
         $endOffset = isset($data['endOffset']) ? (int) $data['endOffset'] : null;
 
@@ -91,6 +97,7 @@ final class TextController extends AbstractController
                 $word,
                 $context,
                 $provider,
+                $prompt,
                 $startOffset,
                 $endOffset
             );
