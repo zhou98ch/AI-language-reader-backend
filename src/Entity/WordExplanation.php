@@ -24,6 +24,12 @@ class WordExplanation
     #[ORM\Column(type: Types::TEXT)]
     private ?string $contextText = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $startOffset = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $endOffset = null;
+
     #[ORM\Column(type: Types::TEXT)]
     private ?string $explanation = null;
 
@@ -67,6 +73,30 @@ class WordExplanation
     public function setContextText(string $contextText): static
     {
         $this->contextText = $contextText;
+
+        return $this;
+    }
+
+    public function getStartOffset(): ?int
+    {
+        return $this->startOffset;
+    }
+
+    public function setStartOffset(?int $startOffset): static
+    {
+        $this->startOffset = $startOffset;
+
+        return $this;
+    }
+
+    public function getEndOffset(): ?int
+    {
+        return $this->endOffset;
+    }
+
+    public function setEndOffset(?int $endOffset): static
+    {
+        $this->endOffset = $endOffset;
 
         return $this;
     }

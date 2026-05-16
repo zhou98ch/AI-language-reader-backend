@@ -30,8 +30,14 @@ final class ExplainWordUseCase
      *     cached: bool
      * }
      */
-    public function execute(int $textDocumentId, string $word, string $context, string $provider = 'fake'): ExplainWordResult
-    {
+    public function execute(
+        int $textDocumentId,
+        string $word,
+        string $context,
+        string $provider = 'fake',
+        ?int $startOffset = null,
+        ?int $endOffset = null,
+    ): ExplainWordResult {
         $document = $this->textDocumentRepository->find($textDocumentId);
 
         if (!$document) {
@@ -47,11 +53,20 @@ final class ExplainWordUseCase
         if ($context === '') {
             throw new InvalidArgumentException('context are required');
         }
+        if ($startOffset === null || $endOffset === null) {
+            throw new InvalidArgumentException('startOffset and endOffset are required');
+        }
+        if ($startOffset < 0) {
+            throw new InvalidArgumentException('startOffset must be greater than or equal to 0');
+        }
+        if ($endOffset <= $startOffset) {
+            throw new InvalidArgumentException('endOffset must be greater than startOffset');
+        }
 
         $existingExplanation = $this->wordExplanationRepository->findOneBy([
             'textDocument' => $document,
-            'word' => $word,
-            'contextText' => $context,
+            'startOffset' => $startOffset,
+            'endOffset' => $endOffset,
         ]);
 
         if ($existingExplanation) {
@@ -70,6 +85,8 @@ final class ExplainWordUseCase
             ->setTextDocument($document)
             ->setWord($word)
             ->setContextText($context)
+            ->setStartOffset($startOffset)
+            ->setEndOffset($endOffset)
             ->setExplanation(json_encode($explanationData, JSON_UNESCAPED_UNICODE))
             ->setCreatedAt(new \DateTimeImmutable());
 
@@ -81,6 +98,6 @@ final class ExplainWordUseCase
             context: $wordExplanation->getContextText(),
             explanation: $explanationData,
             cached: false,
-    );
+        );
     }
 }

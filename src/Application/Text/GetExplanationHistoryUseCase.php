@@ -34,6 +34,9 @@ final class GetExplanationHistoryUseCase
                 'id' => $explanation->getId(),
                 'word' => $explanation->getWord(),
                 'context' => $explanation->getContextText(),
+                'startOffset' => $explanation->getStartOffset(),
+                'endOffset' => $explanation->getEndOffset(),
+                'explanation' => json_decode($explanation->getExplanation(), true),
                 'createdAt' => $explanation->getCreatedAt()?->format(\DateTimeInterface::ATOM),
             ];
         }

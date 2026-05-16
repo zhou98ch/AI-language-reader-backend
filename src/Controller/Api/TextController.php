@@ -80,11 +80,20 @@ final class TextController extends AbstractController
         $word = trim($data['word'] ?? '');
         $context = trim($data['context'] ?? '');
         $provider = trim($data['provider'] ?? 'fake');
+        $startOffset = isset($data['startOffset']) ? (int) $data['startOffset'] : null;
+        $endOffset = isset($data['endOffset']) ? (int) $data['endOffset'] : null;
 
 
         try {
 
-            $result = $this->explainWordUseCase->execute($docId, $word, $context, $provider);
+            $result = $this->explainWordUseCase->execute(
+                $docId,
+                $word,
+                $context,
+                $provider,
+                $startOffset,
+                $endOffset
+            );
 
         } catch (TextDocumentNotFoundException $e) {
             return $this->json([
