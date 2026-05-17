@@ -2,6 +2,8 @@ FROM composer:2 AS vendor
 
 WORKDIR /app
 
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
