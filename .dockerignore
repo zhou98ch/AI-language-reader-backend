@@ -1,6 +1,0 @@
-.git
-.idea
-.env.local
-.env.*.local
-vendor
-var
