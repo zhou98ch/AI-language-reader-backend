@@ -185,5 +185,22 @@ final class TextController extends AbstractController
 
         return $this->json($result);
     }
+    #[Route('/api/debug-env', name: 'api_debug_env', methods: ['GET'])]
+    public function debugEnv(): JsonResponse
+    {
+        $databaseUrl = $_SERVER['DATABASE_URL'] ?? $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL') ?: '';
+
+        $parts = parse_url($databaseUrl);
+
+        return $this->json([
+            'appEnv' => $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: null,
+            'appDebug' => $_SERVER['APP_DEBUG'] ?? $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG') ?: null,
+            'databaseScheme' => $parts['scheme'] ?? null,
+            'databaseHost' => $parts['host'] ?? null,
+            'databasePort' => $parts['port'] ?? null,
+            'databaseName' => isset($parts['path']) ? ltrim($parts['path'], '/') : null,
+            'hasDatabasePassword' => isset($parts['pass']),
+        ]);
+    }
 
 }
