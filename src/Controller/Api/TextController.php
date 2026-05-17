@@ -3,7 +3,6 @@
 namespace App\Controller\Api;
 
 use App\Application\AI\Exception\AiProviderUnavailableException;
-use App\Application\AI\Exception\DailyAiQuotaExceededException;
 use App\Application\Text\ExplainWordUseCase;
 use App\Application\Text\Exception\TextDocumentNotFoundException;
 use App\Application\Text\GetExplanationHistoryUseCase;
@@ -125,12 +124,6 @@ final class TextController extends AbstractController
             return $this->json([
                 'error' => $e->getMessage(),
             ], 400);
-        } catch (DailyAiQuotaExceededException $e) {
-            return $this->json([
-                'error' => $e->getMessage(),
-                'provider' => $e->getProvider(),
-                'dailyCallLimit' => $e->getDailyCallLimit(),
-            ], 429);
         } catch (AiProviderUnavailableException $e) {
             return $this->json([
                 'error' => $e->getMessage(),
@@ -184,23 +177,6 @@ final class TextController extends AbstractController
         }
 
         return $this->json($result);
-    }
-    #[Route('/api/debug-env', name: 'api_debug_env', methods: ['GET'])]
-    public function debugEnv(): JsonResponse
-    {
-        $databaseUrl = $_SERVER['DATABASE_URL'] ?? $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL') ?: '';
-
-        $parts = parse_url($databaseUrl);
-
-        return $this->json([
-            'appEnv' => $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: null,
-            'appDebug' => $_SERVER['APP_DEBUG'] ?? $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG') ?: null,
-            'databaseScheme' => $parts['scheme'] ?? null,
-            'databaseHost' => $parts['host'] ?? null,
-            'databasePort' => $parts['port'] ?? null,
-            'databaseName' => isset($parts['path']) ? ltrim($parts['path'], '/') : null,
-            'hasDatabasePassword' => isset($parts['pass']),
-        ]);
     }
 
 }

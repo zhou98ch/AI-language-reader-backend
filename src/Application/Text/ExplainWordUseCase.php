@@ -2,7 +2,6 @@
 
 namespace App\Application\Text;
 
-use App\Application\AI\Exception\DailyAiQuotaExceededException;
 use App\Application\Text\DTO\ExplainWordResult;
 use App\Application\Text\Exception\TextDocumentNotFoundException;
 use App\Entity\WordExplanation;
@@ -23,19 +22,9 @@ final class ExplainWordUseCase
         private readonly WordExplanationRepository $wordExplanationRepository,
         private readonly AiExplanationClientRegistry $aiClientRegistry,
         private readonly EntityManagerInterface $entityManager,
-        private readonly int $geminiDailyCallLimit,
-        private readonly string $projectDir,
     ) {
     }
 
-    /**
-     * @return ExplainWordResult{
-     *     word: string,
-     *     context: string,
-     *     explanation: string,
-     *     cached: bool
-     * }
-     */
     public function execute(
         int $textDocumentId,
         string $word,
@@ -105,11 +94,6 @@ final class ExplainWordUseCase
         }
 
         $aiExplanationClient = $this->aiClientRegistry->get($provider);
-
-        if ($provider === 'gemini') {
-            $this->consumeGeminiDailyQuota();
-        }
-
         $explanationData = $aiExplanationClient->explain($word, $context, prompt: $prompt);
 
         if ($explanationType === self::INLINE_EXPLANATION) {
@@ -143,27 +127,31 @@ final class ExplainWordUseCase
 
     private function buildInlineExplanationPrompt(): string
     {
-        return <<<'PROMPT'
-请根据上下文给德语单词生成原文内联短解释。
-
-返回规则：
-- 如果当前词形已经是基本形式，只返回中文释义
-- 如果当前词形不是基本形式，返回“基本形式 中文释义”
-- 动词基本形式用不定式
-- 名词基本形式用单数主格
-- 形容词基本形式用原级
-- 如果是可分动词，基本形式返回完整不定式
-- 中文释义最多 8 个汉字
-- 整体最多 40 个字符
-- 不要解释语法
-- 不要加标点
-- 不要返回 JSON
-- 只返回一行
-PROMPT;
+        return implode("\n", [
+            'Generate a short inline explanation for a German word based on the context.',
+            '',
+            'Return rules:',
+            '- If the current word form is already the base form, return only the English meaning.',
+            '- If the current word form is not the base form, return "base form English meaning".',
+            '- Use the infinitive as the base form for verbs.',
+            '- Use singular nominative as the base form for nouns.',
+            '- Use the positive form as the base form for adjectives.',
+            '- If it is a separable verb, return the complete infinitive.',
+            '- Keep the English meaning within 4 words.',
+            '- Keep the whole answer within 40 characters.',
+            '- Do not explain grammar.',
+            '- Do not add punctuation.',
+            '- Do not return JSON.',
+            '- Return only one line.',
+        ]);
     }
 
     private function normalizeInlineExplanation(string $explanation): string
     {
+        // Sanitize AI output:
+        // - keep only the first line
+        // - remove extra spaces
+        // - strip trailing punctuation
         $explanation = trim(preg_split('/\R/u', $explanation)[0] ?? '');
         $explanation = trim($explanation, " \t\n\r\0\x0B.,;:!?。；：！？");
 
@@ -176,56 +164,5 @@ PROMPT;
         }
 
         return $explanation;
-    }
-
-    private function consumeGeminiDailyQuota(): void
-    {
-        if ($this->geminiDailyCallLimit <= 0) {
-            throw new DailyAiQuotaExceededException('gemini', $this->geminiDailyCallLimit);
-        }
-
-        $quotaFile = $this->projectDir . '/var/gemini_daily_quota.json';
-        $quotaDir = dirname($quotaFile);
-
-        if (!is_dir($quotaDir) && !mkdir($quotaDir, 0775, true) && !is_dir($quotaDir)) {
-            throw new RuntimeException('Unable to create AI quota directory');
-        }
-
-        $handle = fopen($quotaFile, 'c+');
-
-        if ($handle === false) {
-            throw new RuntimeException('Unable to open AI quota file');
-        }
-
-        try {
-            if (!flock($handle, LOCK_EX)) {
-                throw new RuntimeException('Unable to lock AI quota file');
-            }
-
-            $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
-            $contents = stream_get_contents($handle);
-            $quota = is_string($contents) && $contents !== '' ? json_decode($contents, true) : [];
-
-            if (!is_array($quota) || ($quota['date'] ?? null) !== $today) {
-                $quota = [
-                    'date' => $today,
-                    'geminiCalls' => 0,
-                ];
-            }
-
-            if (($quota['geminiCalls'] ?? 0) >= $this->geminiDailyCallLimit) {
-                throw new DailyAiQuotaExceededException('gemini', $this->geminiDailyCallLimit);
-            }
-
-            ++$quota['geminiCalls'];
-
-            rewind($handle);
-            ftruncate($handle, 0);
-            fwrite($handle, json_encode($quota, JSON_PRETTY_PRINT));
-            fflush($handle);
-        } finally {
-            flock($handle, LOCK_UN);
-            fclose($handle);
-        }
     }
 }
