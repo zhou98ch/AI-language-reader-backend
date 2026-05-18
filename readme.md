@@ -16,6 +16,15 @@ https://github.com/zhou98ch/AI-language-reader-frontend
 - Cache repeated explanations using document position, provider, explanation type, and prompt hash
 - Gemini API integration through an AI provider registry
 
+  future implementations:
+- Add more API provider integration
+- Add more text uploading options, pdf, mobi, epub...
+- Allow users to set up their own AI API keys, and do this in a safe way
+- allow target language selection (inline translation show in this language)
+- when store explanation history, consider also the target language (add this field into db)
+- allow public/private text
+- For public texts, show explanation history from different users, descending by "like" numbers
+
 ## Tech Stack
 - PHP 8.4+
 - Symfony 8
