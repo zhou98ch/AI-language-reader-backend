@@ -16,7 +16,7 @@ https://github.com/zhou98ch/AI-language-reader-frontend
 - Cache repeated explanations using document position, provider, explanation type, and prompt hash
 - Gemini API integration through an AI provider registry
 
-  future implementations:
+## future implementations:
 - Add more API provider integration
 - Add more text uploading options, pdf, mobi, epub...
 - Allow users to set up their own AI API keys, and do this in a safe way
